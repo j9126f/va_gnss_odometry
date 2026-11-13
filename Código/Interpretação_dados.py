@@ -60,7 +60,10 @@ IMU_ESCALA_GIRO = math.radians(720 / 2 ** 31) * IMU_TAXA   # contagem -> rad/s
 #  - cima = -x do IMU: medido com o carro parado (gravidade em -x; SETIMUORIENTATION 2 = X do IMU para baixo)
 #  - frente/esquerda: POR CONFIRMAR na 1.ª volta. O programa compara com o GNSS e o INS e avisa se estiver errado.
 EIXOS_IMU = {'x': ('y', +1), 'y': ('z', -1), 'z': ('x', -1)}
-INS_ESTADOS_VALIDOS = (3,)    # InertialSolutionStatus: 3 = INS_SOLUTION_GOOD
+# InertialSolutionStatus aceites: 3 = INS_SOLUTION_GOOD, 7 = INS_ALIGNMENT_COMPLETE (já alinhado, ainda a
+# convergir; o SPAN pode ficar aqui bastante tempo). Em ambos o rumo só é usado se o σ do INSPVAX for
+# menor que SIGMA_RUMO_INS_MAX.
+INS_ESTADOS_VALIDOS = (3, 7)
 
 # ------------------------------------- veículo --------------------------------------------
 WHEEL_BASE = 2.7              # distância entre eixos (m)

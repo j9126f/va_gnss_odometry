@@ -1,0 +1,550 @@
+rosbag2_bagfile_information:
+  version: 9
+  storage_identifier: mcap
+  duration:
+    nanoseconds: 525009898367
+  starting_time:
+    nanoseconds_since_epoch: 1794578502699077469
+  message_count: 377346
+  topics_with_message_count:
+    - topic_metadata:
+        name: /novatel/oem7/heading2
+        type: novatel_oem7_msgs/msg/HEADING2
+        serialization_format: cdr
+        offered_qos_profiles:
+          - history: unknown
+            depth: 0
+            reliability: reliable
+            durability: volatile
+            deadline:
+              sec: 9223372036
+              nsec: 854775807
+            lifespan:
+              sec: 9223372036
+              nsec: 854775807
+            liveliness: automatic
+            liveliness_lease_duration:
+              sec: 9223372036
+              nsec: 854775807
+            avoid_ros_namespace_conventions: false
+        type_description_hash: RIHS01_d64112d29f2f833d52988d4ae7c259c0d8e9c8829ee606535b253be3abf869ba
+      message_count: 0
+    - topic_metadata:
+        name: /novatel/oem7/insstdev
+        type: novatel_oem7_msgs/msg/INSSTDEV
+        serialization_format: cdr
+        offered_qos_profiles:
+          - history: unknown
+            depth: 0
+            reliability: reliable
+            durability: volatile
+            deadline:
+              sec: 9223372036
+              nsec: 854775807
+            lifespan:
+              sec: 9223372036
+              nsec: 854775807
+            liveliness: automatic
+            liveliness_lease_duration:
+              sec: 9223372036
+              nsec: 854775807
+            avoid_ros_namespace_conventions: false
+        type_description_hash: RIHS01_26c7d462e53f935164f80d3ba7a139328038e19bb8df6de5594a22748b9193e8
+      message_count: 0
+    - topic_metadata:
+        name: /novatel/oem7/rxstatus
+        type: novatel_oem7_msgs/msg/RXSTATUS
+        serialization_format: cdr
+        offered_qos_profiles:
+          - history: unknown
+            depth: 0
+            reliability: reliable
+            durability: volatile
+            deadline:
+              sec: 9223372036
+              nsec: 854775807
+            lifespan:
+              sec: 9223372036
+              nsec: 854775807
+            liveliness: automatic
+            liveliness_lease_duration:
+              sec: 9223372036
+              nsec: 854775807
+            avoid_ros_namespace_conventions: false
+        type_description_hash: RIHS01_f9581a4baacea6b676156e749c89f9a2d8d07d4aab047268cf3c8d376f7a6024
+      message_count: 11
+    - topic_metadata:
+        name: /novatel/oem7/odom
+        type: nav_msgs/msg/Odometry
+        serialization_format: cdr
+        offered_qos_profiles:
+          - history: unknown
+            depth: 0
+            reliability: reliable
+            durability: volatile
+            deadline:
+              sec: 9223372036
+              nsec: 854775807
+            lifespan:
+              sec: 9223372036
+              nsec: 854775807
+            liveliness: automatic
+            liveliness_lease_duration:
+              sec: 9223372036
+              nsec: 854775807
+            avoid_ros_namespace_conventions: false
+        type_description_hash: RIHS01_3cc97dc7fb7502f8714462c526d369e35b603cfc34d946e3f2eda2766dfec6e0
+      message_count: 26251
+    - topic_metadata:
+        name: /novatel/oem7/corrimu
+        type: novatel_oem7_msgs/msg/CORRIMU
+        serialization_format: cdr
+        offered_qos_profiles:
+          - history: unknown
+            depth: 0
+            reliability: reliable
+            durability: volatile
+            deadline:
+              sec: 9223372036
+              nsec: 854775807
+            lifespan:
+              sec: 9223372036
+              nsec: 854775807
+            liveliness: automatic
+            liveliness_lease_duration:
+              sec: 9223372036
+              nsec: 854775807
+            avoid_ros_namespace_conventions: false
+        type_description_hash: RIHS01_f73d39d47ebfa5ec613c590b4fcde47a5650691c66f4fc74fbf9b58c3d45e473
+      message_count: 0
+    - topic_metadata:
+        name: /novatel/oem7/imu/data_raw
+        type: sensor_msgs/msg/Imu
+        serialization_format: cdr
+        offered_qos_profiles:
+          - history: unknown
+            depth: 0
+            reliability: reliable
+            durability: volatile
+            deadline:
+              sec: 9223372036
+              nsec: 854775807
+            lifespan:
+              sec: 9223372036
+              nsec: 854775807
+            liveliness: automatic
+            liveliness_lease_duration:
+              sec: 9223372036
+              nsec: 854775807
+            avoid_ros_namespace_conventions: false
+        type_description_hash: RIHS01_7d9a00ff131080897a5ec7e26e315954b8eae3353c3f995c55faf71574000b5b
+      message_count: 0
+    - topic_metadata:
+        name: /novatel/oem7/bestgnsspos
+        type: novatel_oem7_msgs/msg/BESTGNSSPOS
+        serialization_format: cdr
+        offered_qos_profiles:
+          - history: unknown
+            depth: 0
+            reliability: reliable
+            durability: volatile
+            deadline:
+              sec: 9223372036
+              nsec: 854775807
+            lifespan:
+              sec: 9223372036
+              nsec: 854775807
+            liveliness: automatic
+            liveliness_lease_duration:
+              sec: 9223372036
+              nsec: 854775807
+            avoid_ros_namespace_conventions: false
+        type_description_hash: RIHS01_f78e62f569a6b6f737671615eb9f93568d7aad2b70c5ccbcc8ce4cfa794ddfae
+      message_count: 0
+    - topic_metadata:
+        name: /novatel/oem7/bestgnssvel
+        type: novatel_oem7_msgs/msg/BESTGNSSVEL
+        serialization_format: cdr
+        offered_qos_profiles:
+          - history: unknown
+            depth: 0
+            reliability: reliable
+            durability: volatile
+            deadline:
+              sec: 9223372036
+              nsec: 854775807
+            lifespan:
+              sec: 9223372036
+              nsec: 854775807
+            liveliness: automatic
+            liveliness_lease_duration:
+              sec: 9223372036
+              nsec: 854775807
+            avoid_ros_namespace_conventions: false
+        type_description_hash: RIHS01_409f23ad16621b8416bb992a8a083e5e309ca1fc74ff29bd6a5531e79c327211
+      message_count: 5250
+    - topic_metadata:
+        name: /novatel/oem7/bestpos
+        type: novatel_oem7_msgs/msg/BESTPOS
+        serialization_format: cdr
+        offered_qos_profiles:
+          - history: unknown
+            depth: 0
+            reliability: reliable
+            durability: volatile
+            deadline:
+              sec: 9223372036
+              nsec: 854775807
+            lifespan:
+              sec: 9223372036
+              nsec: 854775807
+            liveliness: automatic
+            liveliness_lease_duration:
+              sec: 9223372036
+              nsec: 854775807
+            avoid_ros_namespace_conventions: false
+        type_description_hash: RIHS01_cbe4b253a9dc74866e49bff0e1304a90d4c7c1b9d65ecca1cdfdfe5ef83b5021
+      message_count: 5250
+    - topic_metadata:
+        name: /novatel/oem7/bestutm
+        type: novatel_oem7_msgs/msg/BESTUTM
+        serialization_format: cdr
+        offered_qos_profiles:
+          - history: unknown
+            depth: 0
+            reliability: reliable
+            durability: volatile
+            deadline:
+              sec: 9223372036
+              nsec: 854775807
+            lifespan:
+              sec: 9223372036
+              nsec: 854775807
+            liveliness: automatic
+            liveliness_lease_duration:
+              sec: 9223372036
+              nsec: 854775807
+            avoid_ros_namespace_conventions: false
+        type_description_hash: RIHS01_9b1de63a153186b3c6106b1c0ea5b3f7c1bbaea7a25a3df8a20c32608b9e6bb3
+      message_count: 525
+    - topic_metadata:
+        name: /novatel/oem7/bestvel
+        type: novatel_oem7_msgs/msg/BESTVEL
+        serialization_format: cdr
+        offered_qos_profiles:
+          - history: unknown
+            depth: 0
+            reliability: reliable
+            durability: volatile
+            deadline:
+              sec: 9223372036
+              nsec: 854775807
+            lifespan:
+              sec: 9223372036
+              nsec: 854775807
+            liveliness: automatic
+            liveliness_lease_duration:
+              sec: 9223372036
+              nsec: 854775807
+            avoid_ros_namespace_conventions: false
+        type_description_hash: RIHS01_3d3310392fcef41c26e06f0f4908ca9c22a7fc4da350f0de036bcd1e5def5c3c
+      message_count: 5250
+    - topic_metadata:
+        name: /novatel/oem7/gps
+        type: gps_msgs/msg/GPSFix
+        serialization_format: cdr
+        offered_qos_profiles:
+          - history: unknown
+            depth: 0
+            reliability: reliable
+            durability: volatile
+            deadline:
+              sec: 9223372036
+              nsec: 854775807
+            lifespan:
+              sec: 9223372036
+              nsec: 854775807
+            liveliness: automatic
+            liveliness_lease_duration:
+              sec: 9223372036
+              nsec: 854775807
+            avoid_ros_namespace_conventions: false
+        type_description_hash: RIHS01_f4e11a63872a198f70300a3990f50b096ed822f2db2bb626f6cdcee5f0f92942
+      message_count: 26251
+    - topic_metadata:
+        name: /novatel/oem7/oem7raw
+        type: novatel_oem7_msgs/msg/Oem7RawMsg
+        serialization_format: cdr
+        offered_qos_profiles:
+          - history: unknown
+            depth: 0
+            reliability: reliable
+            durability: volatile
+            deadline:
+              sec: 9223372036
+              nsec: 854775807
+            lifespan:
+              sec: 9223372036
+              nsec: 854775807
+            liveliness: automatic
+            liveliness_lease_duration:
+              sec: 9223372036
+              nsec: 854775807
+            avoid_ros_namespace_conventions: false
+        type_description_hash: RIHS01_c2a9e163528ad3b3c9f7e4d573de89e402c389478296e659224115c3570fca61
+      message_count: 150000
+    - topic_metadata:
+        name: /novatel/oem7/rawimusx
+        type: novatel_oem7_msgs/msg/RAWIMUSX
+        serialization_format: cdr
+        offered_qos_profiles:
+          - history: unknown
+            depth: 0
+            reliability: reliable
+            durability: volatile
+            deadline:
+              sec: 9223372036
+              nsec: 854775807
+            lifespan:
+              sec: 9223372036
+              nsec: 854775807
+            liveliness: automatic
+            liveliness_lease_duration:
+              sec: 9223372036
+              nsec: 854775807
+            avoid_ros_namespace_conventions: false
+        type_description_hash: RIHS01_14650e0a55d7e421c7e7623bb2138d59199f75778234eb7e394a9d834d2170dd
+      message_count: 105007
+    - topic_metadata:
+        name: /novatel/oem7/terrastarinfo
+        type: novatel_oem7_msgs/msg/TERRASTARINFO
+        serialization_format: cdr
+        offered_qos_profiles:
+          - history: unknown
+            depth: 0
+            reliability: reliable
+            durability: volatile
+            deadline:
+              sec: 9223372036
+              nsec: 854775807
+            lifespan:
+              sec: 9223372036
+              nsec: 854775807
+            liveliness: automatic
+            liveliness_lease_duration:
+              sec: 9223372036
+              nsec: 854775807
+            avoid_ros_namespace_conventions: false
+        type_description_hash: RIHS01_ee19c8b206a9f4221f10948df67f540044905fbed7017c3c22233ece43650d41
+      message_count: 0
+    - topic_metadata:
+        name: /novatel/oem7/imu/data
+        type: sensor_msgs/msg/Imu
+        serialization_format: cdr
+        offered_qos_profiles:
+          - history: unknown
+            depth: 0
+            reliability: reliable
+            durability: volatile
+            deadline:
+              sec: 9223372036
+              nsec: 854775807
+            lifespan:
+              sec: 9223372036
+              nsec: 854775807
+            liveliness: automatic
+            liveliness_lease_duration:
+              sec: 9223372036
+              nsec: 854775807
+            avoid_ros_namespace_conventions: false
+        type_description_hash: RIHS01_7d9a00ff131080897a5ec7e26e315954b8eae3353c3f995c55faf71574000b5b
+      message_count: 0
+    - topic_metadata:
+        name: /novatel/oem7/terrastarstatus
+        type: novatel_oem7_msgs/msg/TERRASTARSTATUS
+        serialization_format: cdr
+        offered_qos_profiles:
+          - history: unknown
+            depth: 0
+            reliability: reliable
+            durability: volatile
+            deadline:
+              sec: 9223372036
+              nsec: 854775807
+            lifespan:
+              sec: 9223372036
+              nsec: 854775807
+            liveliness: automatic
+            liveliness_lease_duration:
+              sec: 9223372036
+              nsec: 854775807
+            avoid_ros_namespace_conventions: false
+        type_description_hash: RIHS01_f9634ad2c9be2eb0782aa5f1edb06a96e6a7541867bd19f531b42a1e86309dae
+      message_count: 0
+    - topic_metadata:
+        name: /novatel/oem7/insconfig
+        type: novatel_oem7_msgs/msg/INSCONFIG
+        serialization_format: cdr
+        offered_qos_profiles:
+          - history: unknown
+            depth: 0
+            reliability: reliable
+            durability: volatile
+            deadline:
+              sec: 9223372036
+              nsec: 854775807
+            lifespan:
+              sec: 9223372036
+              nsec: 854775807
+            liveliness: automatic
+            liveliness_lease_duration:
+              sec: 9223372036
+              nsec: 854775807
+            avoid_ros_namespace_conventions: false
+        type_description_hash: RIHS01_deb8cffdec1bc76f4959fd2d6f677f9a6147d65bc67e4e82264ea48b9f9eed11
+      message_count: 0
+    - topic_metadata:
+        name: /novatel/oem7/inspva
+        type: novatel_oem7_msgs/msg/INSPVA
+        serialization_format: cdr
+        offered_qos_profiles:
+          - history: unknown
+            depth: 0
+            reliability: reliable
+            durability: volatile
+            deadline:
+              sec: 9223372036
+              nsec: 854775807
+            lifespan:
+              sec: 9223372036
+              nsec: 854775807
+            liveliness: automatic
+            liveliness_lease_duration:
+              sec: 9223372036
+              nsec: 854775807
+            avoid_ros_namespace_conventions: false
+        type_description_hash: RIHS01_ce4a58bb0a45bb871a6663310792cef574b030e8b569d3df762d5a3d449159bb
+      message_count: 26251
+    - topic_metadata:
+        name: /novatel/oem7/inspvax
+        type: novatel_oem7_msgs/msg/INSPVAX
+        serialization_format: cdr
+        offered_qos_profiles:
+          - history: unknown
+            depth: 0
+            reliability: reliable
+            durability: volatile
+            deadline:
+              sec: 9223372036
+              nsec: 854775807
+            lifespan:
+              sec: 9223372036
+              nsec: 854775807
+            liveliness: automatic
+            liveliness_lease_duration:
+              sec: 9223372036
+              nsec: 854775807
+            avoid_ros_namespace_conventions: false
+        type_description_hash: RIHS01_393b8b98dd7577e06c787604940e2092f570919f2331a2e77b652050b3d8b0ad
+      message_count: 525
+    - topic_metadata:
+        name: /novatel/oem7/fix
+        type: sensor_msgs/msg/NavSatFix
+        serialization_format: cdr
+        offered_qos_profiles:
+          - history: unknown
+            depth: 0
+            reliability: reliable
+            durability: volatile
+            deadline:
+              sec: 9223372036
+              nsec: 854775807
+            lifespan:
+              sec: 9223372036
+              nsec: 854775807
+            liveliness: automatic
+            liveliness_lease_duration:
+              sec: 9223372036
+              nsec: 854775807
+            avoid_ros_namespace_conventions: false
+        type_description_hash: RIHS01_62223ab3fe210a15976021da7afddc9e200dc9ec75231c1b6a557fc598a65404
+      message_count: 26250
+    - topic_metadata:
+        name: /novatel/oem7/ppppos
+        type: novatel_oem7_msgs/msg/PPPPOS
+        serialization_format: cdr
+        offered_qos_profiles:
+          - history: unknown
+            depth: 0
+            reliability: reliable
+            durability: volatile
+            deadline:
+              sec: 9223372036
+              nsec: 854775807
+            lifespan:
+              sec: 9223372036
+              nsec: 854775807
+            liveliness: automatic
+            liveliness_lease_duration:
+              sec: 9223372036
+              nsec: 854775807
+            avoid_ros_namespace_conventions: false
+        type_description_hash: RIHS01_295f900eac63ad5459a0537d9a7c5f478a4e15a6f2421a08096564b9f9502bdf
+      message_count: 0
+    - topic_metadata:
+        name: /novatel/oem7/time
+        type: novatel_oem7_msgs/msg/TIME
+        serialization_format: cdr
+        offered_qos_profiles:
+          - history: unknown
+            depth: 0
+            reliability: reliable
+            durability: volatile
+            deadline:
+              sec: 9223372036
+              nsec: 854775807
+            lifespan:
+              sec: 9223372036
+              nsec: 854775807
+            liveliness: automatic
+            liveliness_lease_duration:
+              sec: 9223372036
+              nsec: 854775807
+            avoid_ros_namespace_conventions: false
+        type_description_hash: RIHS01_ec8a6db344e88c52dc0d82023e59b8bb8f8969d7480599b40e2c38093d03cb26
+      message_count: 525
+    - topic_metadata:
+        name: /novatel/oem7/odom_origin
+        type: nav_msgs/msg/Odometry
+        serialization_format: cdr
+        offered_qos_profiles:
+          - history: unknown
+            depth: 0
+            reliability: reliable
+            durability: volatile
+            deadline:
+              sec: 9223372036
+              nsec: 854775807
+            lifespan:
+              sec: 9223372036
+              nsec: 854775807
+            liveliness: automatic
+            liveliness_lease_duration:
+              sec: 9223372036
+              nsec: 854775807
+            avoid_ros_namespace_conventions: false
+        type_description_hash: RIHS01_3cc97dc7fb7502f8714462c526d369e35b603cfc34d946e3f2eda2766dfec6e0
+      message_count: 0
+  compression_format: ""
+  compression_mode: ""
+  relative_file_paths:
+    - g00_gnss-ins_20261113_140141_teste1_0.mcap
+  files:
+    - path: g00_gnss-ins_20261113_140141_teste1_0.mcap
+      starting_time:
+        nanoseconds_since_epoch: 1794578502699077469
+      duration:
+        nanoseconds: 525009898367
+      message_count: 377346
+  custom_data: ~
+  ros_distro: jazzy

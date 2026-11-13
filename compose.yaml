@@ -25,6 +25,7 @@ services:
   driver:
     <<: *ros
     command: oem7_driver.sh
+    restart: unless-stopped   # volta a arrancar se o USB falhar/for religado (para parar: docker compose down)
     volumes:
       - /dev:/dev             # portas USB/série (também se ligadas depois do arranque)
     device_cgroup_rules:
