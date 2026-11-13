@@ -8,6 +8,15 @@
 #  - TERRASTAR* também têm strings e não são precisos.
 oem7_strict_receiver_init: false
 
+# Sem INSCONFIG o driver não sabe a taxa do IMU (ADIS16488 = 200 Hz); sem ela não publica imu/data_raw.
+oem7_imu_rate: 200
+
+# Mesmo assim o driver não publica imu/data nem imu/data_raw: os fatores de escala do IMU vêm do
+# INSCONFIG, que o OEM6 não tem. Publica-se então o RAWIMUSX descodificado (contagens brutas, 200 Hz):
+# ADIS16488 -> acel: x * 200/2^31 m/s por amostra; giro: x * 720/2^31 graus por amostra (multiplicar
+# por 200 Hz para obter m/s² e °/s). Orientação: usar /novatel/oem7/inspva (roll, pitch, azimuth).
+RAWIMUSX: {topic: rawimusx, frame_id: imu_link}
+
 receiver_init_commands:
 - "UNLOGALL THISPORT"
 - "LOG RXSTATUSB ONCHANGED"

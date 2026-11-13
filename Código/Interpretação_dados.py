@@ -4,7 +4,9 @@ pip install mcap mcap-ros2-support matplotlib numpy
 Usa SÓ o que o carro grava (o mesmo que o gerar_dados.py simula):
   - CAN bus: velocidade das rodas (odómetro) e ângulo de viragem das rodas da frente (rotação)
   - NovAtel GNSS (OEM615): posição (e velocidade) da antena
-  - NovAtel SPAN-IGM-A1: IMU (acelerómetro, giroscópio) e orientação do INS
+  - NovAtel SPAN-IGM-S1 (firmware OEM6, IMU ADIS16488): IMU em bruto (RAWIMUSX) e orientação do INS (INSPVA)
+    Com firmware OEM6 o driver ROS 2 não publica sensor_msgs/Imu: o IMU vem em contagens no
+    /novatel/oem7/rawimusx e é convertido aqui (IMU_ESCALA_*, EIXOS_IMU).
 Não há ground truth: a qualidade avalia-se pela incerteza do Kalman e pelas inovações (GNSS - previsão).
 
 ANTES DO 1.º MCAP REAL: o programa começa por listar os tópicos e tipos do ficheiro. Confirma os nomes em
@@ -44,8 +46,21 @@ from mcap_ros2.writer import Writer
 TOPICO_RODAS = '/can/wheel_speeds'              # CAN: velocidade das rodas
 TOPICO_DIRECAO = '/can/steering_angle'          # CAN: ângulo da roda
 TOPICO_GNSS = '/novatel/oem7/fix'               # NovAtel: sensor_msgs/NavSatFix
-TOPICO_GNSS_VEL = '/novatel/oem7/fix_velocity'  # NovAtel: velocidade (opcional)
-TOPICO_INS = '/novatel/oem7/imu/data'           # NovAtel SPAN: sensor_msgs/Imu
+TOPICO_GNSS_VEL = '/novatel/oem7/bestvel'       # NovAtel: BESTVEL (velocidade horizontal + rumo), opcional
+TOPICO_IMU = '/novatel/oem7/rawimusx'           # NovAtel SPAN: RAWIMUSX (IMU em bruto, contagens, 200 Hz)
+TOPICO_INS = '/novatel/oem7/inspva'             # NovAtel SPAN: INSPVA (posição, velocidade e atitude do INS)
+TOPICO_INS_DESVIO = '/novatel/oem7/inspvax'     # NovAtel SPAN: INSPVAX (desvios-padrão do INS, 1 Hz), opcional
+
+# --------------------------------- IMU (SPAN-IGM-S1) --------------------------------------
+# ADIS16488: o RAWIMUSX dá incrementos por amostra (acel 200/2^31 m/s, giro 720/2^31 graus) a 200 Hz.
+IMU_TAXA = 200.0                                           # Hz
+IMU_ESCALA_ACEL = 200 / 2 ** 31 * IMU_TAXA                 # contagem -> m/s²
+IMU_ESCALA_GIRO = math.radians(720 / 2 ** 31) * IMU_TAXA   # contagem -> rad/s
+# Eixos do VEÍCULO (x frente, y esquerda, z cima) a partir dos eixos do IMU: {eixo do veículo: (eixo do IMU, sinal)}
+#  - cima = -x do IMU: medido com o carro parado (gravidade em -x; SETIMUORIENTATION 2 = X do IMU para baixo)
+#  - frente/esquerda: POR CONFIRMAR na 1.ª volta. O programa compara com o GNSS e o INS e avisa se estiver errado.
+EIXOS_IMU = {'x': ('y', +1), 'y': ('z', -1), 'z': ('x', -1)}
+INS_ESTADOS_VALIDOS = (3,)    # InertialSolutionStatus: 3 = INS_SOLUTION_GOOD
 
 # ------------------------------------- veículo --------------------------------------------
 WHEEL_BASE = 2.7              # distância entre eixos (m)
@@ -120,7 +135,8 @@ print(f"A ler o ficheiro: {mcap_file}")
 # ------------------------------ tópicos que o ficheiro tem --------------------------------
 ESPERADOS = {TOPICO_RODAS: 'velocidade das rodas (CAN)', TOPICO_DIRECAO: 'ângulo da roda (CAN)',
              TOPICO_GNSS: 'GNSS NovAtel', TOPICO_GNSS_VEL: 'velocidade GNSS (opcional)',
-             TOPICO_INS: 'SPAN: IMU + INS'}
+             TOPICO_IMU: 'SPAN: IMU em bruto', TOPICO_INS: 'SPAN: atitude do INS',
+             TOPICO_INS_DESVIO: 'SPAN: desvios-padrão do INS (opcional)'}
 try:
     with open(mcap_file, 'rb') as f:
         resumo = make_reader(f).get_summary()
@@ -146,6 +162,7 @@ tempos_rodas, vel_odo = [], []          # velocidade do odómetro (m/s) = média
 tempos_dir, can_delta = [], []          # ângulo da roda (rad)
 tempos_imu, acel, gyro = [], [], []     # acel = [ax, ay, az] (m/s²), gyro = [wx, wy, wz] (rad/s)
 tempos_yaw, ins_yaw = [], []            # rumo do INS (rad, ENU: 0 = Este), só quando é válido
+tempos_sig_rumo, sig_rumo = [], []      # σ do rumo do INS (rad), do INSPVAX
 n_sem_fix = 0
 avisos_rodas = set()
 
@@ -177,9 +194,12 @@ try:
             var_fix.append(max(cov[0], cov[4]) if msg.position_covariance_type > 0 and cov[0] > 0
                            else EKF_SIGMA_GPS ** 2)
         elif topico == TOPICO_GNSS_VEL:
+            if msg.sol_status.status != 0:          # 0 = SOL_COMPUTED
+                continue
+            trk = math.radians(msg.trk_gnd)          # rumo sobre o solo, graus a partir do Norte (sentido horário)
             tempos_vel.append(t)
-            vel_e.append(msg.twist.twist.linear.x)
-            vel_n.append(msg.twist.twist.linear.y)
+            vel_e.append(msg.hor_speed * math.sin(trk))
+            vel_n.append(msg.hor_speed * math.cos(trk))
         elif topico == TOPICO_RODAS:
             rodas = ler_velocidades_rodas(msg)
             faltam = [r for r in RODAS_ODOMETRO if r not in rodas]
@@ -191,17 +211,22 @@ try:
         elif topico == TOPICO_DIRECAO:
             tempos_dir.append(t)
             can_delta.append(ler_angulo_roda(msg))
-        elif topico == TOPICO_INS:
+        elif topico == TOPICO_IMU:
+            # RAWIMUSX traz -Y (y_acc, y_gyro com sinal trocado), por isso troca-se o sinal aqui
+            bruto_a = {'x': msg.x_acc, 'y': -msg.y_acc, 'z': msg.z_acc}
+            bruto_g = {'x': msg.x_gyro, 'y': -msg.y_gyro, 'z': msg.z_gyro}
             tempos_imu.append(t)
-            a, g = msg.linear_acceleration, msg.angular_velocity
-            acel.append((a.x, a.y, a.z))
-            gyro.append((g.x, g.y, g.z))
-            cov = msg.orientation_covariance
-            # cov[0] = -1: orientação desconhecida (INS por alinhar); σ do rumo grande: ainda não fiável
-            if cov[0] >= 0 and not (cov[8] > SIGMA_RUMO_INS_MAX ** 2):
-                q = msg.orientation
+            acel.append(tuple(sn * bruto_a[e] * IMU_ESCALA_ACEL for e, sn in (EIXOS_IMU[k] for k in 'xyz')))
+            gyro.append(tuple(sn * bruto_g[e] * IMU_ESCALA_GIRO for e, sn in (EIXOS_IMU[k] for k in 'xyz')))
+        elif topico == TOPICO_INS:
+            # antes de alinhar (WAITING_INITIAL_POS, ALIGNING, ...) a orientação não é válida
+            if msg.status.status in INS_ESTADOS_VALIDOS:
                 tempos_yaw.append(t)
-                ins_yaw.append(math.atan2(2 * (q.w * q.z + q.x * q.y), 1 - 2 * (q.y ** 2 + q.z ** 2)))
+                # azimute NovAtel: graus a partir do Norte, sentido horário -> rumo ENU (0 = Este, anti-horário)
+                ins_yaw.append(math.atan2(math.cos(math.radians(msg.azimuth)), math.sin(math.radians(msg.azimuth))))
+        elif topico == TOPICO_INS_DESVIO:
+            tempos_sig_rumo.append(t)
+            sig_rumo.append(math.radians(msg.azimuth_stdev))
 except RecordLengthLimitExceeded as e:
     print(f"\n[ERRO] O leitor detetou um registo inválido ou corrompido no ficheiro MCAP: {e}")
     print("Sugestão: o ficheiro pode estar incompleto (gravação interrompida). Tenta 'mcap recover'.")
@@ -225,6 +250,12 @@ tempos_rodas, vel_odo = ordenar(tempos_rodas, vel_odo)
 tempos_dir, can_delta = ordenar(tempos_dir, can_delta)
 tempos_imu, acel, gyro = ordenar(tempos_imu, acel, gyro)
 tempos_yaw, ins_yaw = ordenar(tempos_yaw, ins_yaw)
+tempos_sig_rumo, sig_rumo = ordenar(tempos_sig_rumo, sig_rumo)
+if len(tempos_yaw) and len(tempos_sig_rumo):
+    # rumo do INS só é usado se o último σ do rumo (INSPVAX, 1 Hz) for pequeno; antes do 1.º σ não é usado
+    k = np.searchsorted(tempos_sig_rumo, tempos_yaw, side='right') - 1
+    fiavel = (k >= 0) & (sig_rumo[np.clip(k, 0, None)] <= SIGMA_RUMO_INS_MAX)
+    tempos_yaw, ins_yaw = tempos_yaw[fiavel], ins_yaw[fiavel]
 
 print('Leitura concluída:')
 print(f' - GNSS ({TOPICO_GNSS}): {len(latitudes)} posições válidas, {n_sem_fix} sem solução (NO_FIX)')
@@ -236,7 +267,37 @@ if len(status_fix):
 print(f' - Velocidade GNSS ({TOPICO_GNSS_VEL}): {len(vel_e)}')
 print(f' - Velocidade das rodas ({TOPICO_RODAS}): {len(vel_odo)}')
 print(f' - Ângulo da roda ({TOPICO_DIRECAO}): {len(can_delta)}')
-print(f' - IMU ({TOPICO_INS}): {len(acel)}, com orientação válida do INS: {len(ins_yaw)}')
+print(f' - IMU ({TOPICO_IMU}): {len(acel)}')
+print(f' - Orientação válida do INS ({TOPICO_INS}): {len(ins_yaw)}')
+if len(acel):
+    print(f'      IMU médio (eixos do veículo): acel {np.round(acel.mean(0), 2)} m/s² '
+          f'(parado: ~[0, 0, 9.8]), giro {np.round(np.degrees(gyro.mean(0)), 3)} °/s')
+
+
+def verificar_eixos_imu():
+    """Confirma EIXOS_IMU com dados em movimento: aceleração para a frente vs derivada da velocidade GNSS
+    e giroscópio z vs derivada do rumo do INS (correlação deve ser claramente positiva)."""
+    if len(acel) < 100:
+        return
+    if len(tempos_vel) > 50:
+        vel = np.hypot(vel_e, vel_n)
+        if np.ptp(vel) > 2.0:                        # houve acelerações a sério (> 2 m/s de variação)
+            dv = np.gradient(vel, tempos_vel)
+            n = max(1, int(IMU_TAXA / 5))            # média móvel de 0.2 s para tirar ruído
+            a_frente = np.convolve(acel[:, 0], np.ones(n) / n, mode='same')
+            r = np.corrcoef(dv, np.interp(tempos_vel, tempos_imu, a_frente))[0, 1]
+            estado = 'OK' if r > 0.5 else 'AVISO: verificar o eixo/sinal "x" em EIXOS_IMU'
+            print(f'   eixo da frente do IMU vs GNSS: correlação {r:+.2f} -> {estado}')
+    if len(tempos_yaw) > 50:
+        rumo = np.unwrap(ins_yaw)
+        if np.ptp(rumo) > math.radians(30):         # houve curvas
+            w_ins = np.gradient(rumo, tempos_yaw)
+            r = np.corrcoef(w_ins, np.interp(tempos_yaw, tempos_imu, gyro[:, 2]))[0, 1]
+            estado = 'OK' if r > 0.5 else 'AVISO: verificar o eixo/sinal "z" em EIXOS_IMU'
+            print(f'   giroscópio z vs rumo do INS: correlação {r:+.2f} -> {estado}')
+
+
+verificar_eixos_imu()
 
 
 # ----------------------------------- funções auxiliares -----------------------------------
@@ -423,7 +484,7 @@ if tem_odo:
         ang_od = np.interp(t_od, tempos_imu, ang_acum)
         dth = np.diff(ang_od, prepend=ang_od[0])
         u_pred = dth / np.where(dt_od > 0, dt_od, 1.0)
-        modo_rot, fonte_rot = 'giro', f'giroscópio ({TOPICO_INS}) - AVISO: ficheiro sem ângulo da roda'
+        modo_rot, fonte_rot = 'giro', f'giroscópio ({TOPICO_IMU}) - AVISO: ficheiro sem ângulo da roda'
     else:
         tem_odo = False
         print('AVISO: sem ângulo da roda nem giroscópio: não é possível calcular a odometria')
@@ -675,9 +736,9 @@ if len(acel):
         ax.legend(loc='upper right', fontsize=8)
 else:
     for ax in (ax3, ax4):
-        sem_dados(ax, f'Sem dados para {TOPICO_INS}')
-ax3.set_title(f'Acelerómetro ({TOPICO_INS})')
-ax4.set_title(f'Giroscópio ({TOPICO_INS})')
+        sem_dados(ax, f'Sem dados para {TOPICO_IMU}')
+ax3.set_title(f'Acelerómetro ({TOPICO_IMU}, eixos do veículo)')
+ax4.set_title(f'Giroscópio ({TOPICO_IMU}, eixos do veículo)')
 fig3.tight_layout()
 fig4.tight_layout()
 

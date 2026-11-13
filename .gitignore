@@ -1,0 +1,6 @@
+# Bags gravados (grandes; ficam no portátil/SSD)
+data/*
+!data/.gitkeep
+
+__pycache__/
+*.pyc
