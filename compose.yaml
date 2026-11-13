@@ -1,0 +1,43 @@
+# Aquisição GNSS/INS (NovAtel SPAN-IGM-S1) - Ubuntu 24.04 nativo + Docker Engine
+#
+#   docker compose build
+#   docker compose run --rm driver detectar_recetor.py   -> descobre porta e baud rate
+#   docker compose up driver                             -> só o driver (para verificar)
+#   docker compose --profile gravar up                   -> driver + gravação MCAP em ./data
+#   docker compose --profile foxglove up                 -> driver + foxglove_bridge (porta 8765)
+#
+# A configuração (grupo, percurso, IP/porta, baud rate, pasta dos bags) está no ficheiro .env
+
+x-ros: &ros
+  build: .
+  image: va/gnss-ins:latest
+  network_mode: host          # rede real do portátil (recetor por Ethernet, DDS)
+  ipc: host                   # Fast DDS entre contentores com rede host
+  stop_signal: SIGINT         # Ctrl+C "limpo" para o driver e para o ros2 bag
+  stop_grace_period: 30s      # tempo para o bag fechar o MCAP
+  env_file: .env
+  environment:
+    - RMW_IMPLEMENTATION=rmw_fastrtps_cpp
+  volumes:
+    - ${DATA_DIR:-./data}:/data
+
+services:
+  driver:
+    <<: *ros
+    command: oem7_driver.sh
+    volumes:
+      - /dev:/dev             # portas USB/série (também se ligadas depois do arranque)
+    device_cgroup_rules:
+      - 'c 188:* rmw'         # /dev/ttyUSB*
+      - 'c 166:* rmw'         # /dev/ttyACM*
+      - 'c 4:* rmw'           # /dev/ttyS*
+
+  gravador:
+    <<: *ros
+    profiles: [gravar]
+    command: gravar.sh
+
+  foxglove:
+    <<: *ros
+    profiles: [foxglove]
+    command: ros2 launch foxglove_bridge foxglove_bridge_launch.xml port:=8765
