@@ -7,6 +7,7 @@ LAUNCH_DIR="$(ros2 pkg prefix novatel_oem7_driver)/share/novatel_oem7_driver/lau
 IP="${OEM7_IP:-}"
 DEV="${OEM7_DEVICE:-}"
 BAUD="${OEM7_BAUD:-115200}"
+export NOVATEL_OEM7_DRIVER_PARAM_OVERRIDES_PATH="${NOVATEL_OEM7_DRIVER_PARAM_OVERRIDES_PATH:-/usr/local/bin/oem7_overrides.yaml}"
 
 if [ -n "$IP" ]; then
     LAUNCH=oem7_net.launch.py

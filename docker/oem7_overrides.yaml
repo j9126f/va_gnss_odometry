@@ -1,0 +1,29 @@
+# Overrides aos parâmetros do driver NovAtel OEM7 (carregados por último no launch file).
+#
+# O SPAN-IGM-S1 tem firmware OEM6:
+#  - rejeita alguns logs OEM7 (INSCONFIG, CORRIMUS, INSSTDEV, efemérides Galileo F/I-NAV),
+#    e em modo strict o driver deixava de publicar posição/INS;
+#  - PPPPOS e BESTGNSSPOS trazem stn_id = 4 bytes nulos (sem estação base) e o driver
+#    aborta ao publicá-los ("The string contains null characters"). BESTPOS não é afetado.
+#  - TERRASTAR* também têm strings e não são precisos.
+oem7_strict_receiver_init: false
+
+receiver_init_commands:
+- "UNLOGALL THISPORT"
+- "LOG RXSTATUSB ONCHANGED"
+- "LOG BESTPOSB ONTIME 0.1"
+- "LOG BESTVELB ONTIME 0.1"
+- "LOG BESTGNSSVELB ONTIME 0.1"
+- "LOG BESTUTMB ONTIME 1"
+- "LOG HEADING2B ONNEW"
+- "LOG PSRDOP2B ONCHANGED"
+- "LOG INSPVASB ONTIME 0.02"
+- "LOG INSPVAXB ONTIME 1"
+- "LOG RAWIMUSXB ONNEW"
+- "LOG TIMEB ONTIME 1"
+- "LOG VERSIONB ONCE"
+- "LOG INSUPDATESTATUSB ONNEW"
+- "LOG RAWEPHEMB ONNEW"
+- "LOG GLOEPHEMERISB ONNEW"
+- "LOG BDSEPHEMERISB ONNEW"
+- "LOG RANGEB ONTIME 1"
