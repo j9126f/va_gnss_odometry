@@ -70,7 +70,7 @@ WHEEL_BASE = 2.7              # distância entre eixos (m)
 BRACO_ANTENA = (1.2, 0.0)     # antena GNSS em relação ao centro do eixo traseiro (m: x frente, y esquerda)
 RODAS_ODOMETRO = ('rl', 'rr')  # rodas usadas no odómetro (traseiras: o modelo bicicleta refere-se a esse eixo)
 FATOR_VEL_RODAS = 1 / 3.6     # unidade da velocidade das rodas no CAN -> m/s (km/h -> m/s)
-RELACAO_DIRECAO = 1.0         # se o CAN der o ângulo do VOLANTE, pôr a desmultiplicação da direção (ex.: 15)
+RELACAO_DIRECAO = 1.0         # 1: o can_direcao.py já aplica CAN_RELACAO_DIRECAO (.env) e publica o ângulo das RODAS
 USAR_TEMPO_HEADER = True      # tempo de cada medição = header.stamp (senão o log_time da gravação)
 
 

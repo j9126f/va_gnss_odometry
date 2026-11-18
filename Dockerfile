@@ -1,4 +1,4 @@
-# Aquisição GNSS/INS NovAtel SPAN-IGM-S1 (ROS 2 Jazzy)
+# Aquisição GNSS/INS NovAtel SPAN-IGM-S1 + CAN bus do carro (ROS 2 Jazzy)
 # Quando a imagem base dos docentes estiver publicada:
 #   docker compose build --build-arg BASE_IMAGE=<imagem-base-do-repositorio-comum>
 ARG BASE_IMAGE=ros:jazzy-ros-base
@@ -10,6 +10,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ros-jazzy-novatel-oem7-driver \
     ros-jazzy-rosbag2-storage-mcap \
     ros-jazzy-foxglove-bridge \
+    ros-jazzy-ros2-socketcan \
+    ros-jazzy-can-msgs \
+    ros-jazzy-ackermann-msgs \
+    iproute2 \
+    can-utils \
     python3-serial \
     && rm -rf /var/lib/apt/lists/*
 

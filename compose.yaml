@@ -3,7 +3,9 @@
 #   docker compose build
 #   docker compose run --rm driver detectar_recetor.py   -> descobre porta e baud rate
 #   docker compose up driver                             -> só o driver (para verificar)
-#   docker compose --profile gravar up                   -> driver + gravação MCAP em ./data
+#   docker compose up can                                -> só o CAN bus (para verificar)
+#   docker compose run --rm can can_identificar.py       -> descobre a mensagem do ângulo de direção
+#   docker compose --profile gravar up                   -> driver + CAN + gravação MCAP em ./data
 #   docker compose --profile foxglove up                 -> driver + foxglove_bridge (porta 8765)
 #
 # A configuração (grupo, percurso, IP/porta, baud rate, pasta dos bags) está no ficheiro .env
@@ -32,6 +34,13 @@ services:
       - 'c 188:* rmw'         # /dev/ttyUSB*
       - 'c 166:* rmw'         # /dev/ttyACM*
       - 'c 4:* rmw'           # /dev/ttyS*
+
+  can:
+    <<: *ros
+    command: can.sh
+    restart: unless-stopped   # volta a arrancar se o adaptador USB2CAN for desligado/religado
+    cap_add:
+      - NET_ADMIN             # configurar a interface SocketCAN (bitrate, listen-only)
 
   gravador:
     <<: *ros
