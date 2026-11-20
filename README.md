@@ -21,7 +21,8 @@ global publicado como objetivo do planeador local (A*).
 | `driver` | `novatel_oem7_driver` | | `/novatel/oem7/inspva`, `/novatel/oem7/bestpos`, `/novatel/oem7/rawimusx`, ... |
 | `tf` | `static_transform_publisher` ×2 | | `/tf_static`: `base_link` → `imu_link`, `base_link` → `gps` |
 | `can` | `socketcan_receiver` + `can_direcao.py` | `can0` | `/can/raw` (can_msgs/Frame), `/can/steering_angle` (ackermann_msgs/AckermannDriveStamped) |
-| `percecao` | `scan_to_grid` (exemplo do modelo; o nó do G7 entra no Ex. 4) | `/scan`, `/tf_static` | `/g07/grelha_local` (nav_msgs/OccupancyGrid) |
+| `rota` | `rota_objetivo` (**nó do G7**) | `/novatel/oem7/inspva` + rota (CSV lat,lon) | `/g07/objetivo` (geometry_msgs/PoseStamped), `/g07/rota_local` (nav_msgs/Path), `/g07/grelha_local` (toda -1) |
+| `percecao` | `scan_to_grid` (exemplo do modelo, só com o simulador) | `/scan`, `/tf_static` | `/g07/grelha_local` (nav_msgs/OccupancyGrid) |
 | `planeador` | `local_astar` (comum, `src/va_planeamento`) | `/g07/grelha_local`, `/g07/objetivo` | `/g07/caminho_local` (nav_msgs/Path), `/g07/estado` (std_msgs/String), `/g07/zona_proibida` |
 
 ## Estrutura
@@ -78,12 +79,31 @@ rota global (aula 9) que está à frente do carro, no `base_link`.
 | **Ocupado (100)** | Nada: o GNSS/INS só mede a pose do próprio carro, não vê o que o rodeia |
 | **Livre (0)** | Nada |
 | **Desconhecido (-1)** | A grelha toda. É publicada (mesma geometria do contrato: 0,2 m, x -5…35 m, y -10…10 m) para o planeador correr sozinho com o objetivo do G7; na parte 2 a grelha vem dos grupos de perceção |
-| **Nó e ficheiro** | `rota_objetivo`, em `src/va_g07/va_g07/rota_objetivo.py` (entrada em `setup.py`; serviço `percecao` do `compose.yaml`) |
-| **Publica** | `/g07/objetivo` (`geometry_msgs/PoseStamped`, `base_link`): ponto da rota a ~25 m à frente, ao longo da rota, dentro da grelha · `/g07/grelha_local` (`nav_msgs/OccupancyGrid`, `base_link`, toda -1) · `/g07/rota_local` (`nav_msgs/Path`, `base_link`): troço da rota à frente, para visualizar |
+| **Nó e ficheiro** | `rota_objetivo`, em `src/va_g07/va_g07/rota_objetivo.py` (cálculos sem ROS em `rota.py`, testes em `src/va_g07/test/`; entrada em `setup.py`; serviço `rota` do `compose.yaml`) |
+| **Publica** | `/g07/objetivo` (`geometry_msgs/PoseStamped`, `base_link`): ponto da rota a ~25 m à frente, ao longo da rota (numa curva apertada, o último ponto ainda dentro da grelha) · `/g07/grelha_local` (`nav_msgs/OccupancyGrid`, `base_link`, toda -1) · `/g07/rota_local` (`nav_msgs/Path`, `base_link`): troço da rota à frente, para visualizar |
 
 Cálculo do objetivo: waypoint mais próximo do carro → avançar 25 m ao longo da rota → (lat, lon) para
 (Este, Norte) local à volta da posição atual → rodar pelo azimute do INSPVA (`x = dE·sin ψ + dN·cos ψ`,
 `y = −dE·cos ψ + dN·sin ψ`, ψ medido de Norte para Este). `header.stamp` = o do INSPVA que lhe deu origem.
+
+**Rota.** A aula 9 não define uma rota GNSS; usa-se um CSV `lat,lon` (qualquer origem: percurso gravado,
+OSRM/OpenStreetMap, Google Directions como na dissertação de Bouça Nova, GPX convertido). A rota por
+omissão, `src/va_g07/rotas/teste1.csv`, é a trajetória do INSPVA do bag `teste1` ("teach and repeat":
+1192 waypoints a cada 2 m, 2,47 km de ida e volta). Para criar outra a partir de um bag:
+
+```bash
+docker compose run --rm planeador ros2 run va_g07 rota_de_bag /data/<bag> /data/rota.csv
+cp data/rota.csv src/va_g07/rotas/<nome>.csv     # e ficheiro_rota em config/params.yaml
+```
+
+Testar com o bag (o INS só tem solução a partir de ~90 s; `--start-offset` salta o alinhamento):
+
+```bash
+docker compose up -d tf rota planeador
+docker compose run --rm reprodutor ros2 bag play /data/g00_gnss-ins_20261113_140141_teste1 \
+    --start-offset 150 --topics /novatel/oem7/inspva
+docker compose logs -f rota planeador                # outro terminal
+```
 
 ## Tópicos do sensor
 

@@ -78,10 +78,16 @@ services:
       --topics ${TOPICOS:-/scan /tf /tf_static}
 
   # ----------------------------------------------------------------- processamento
-  percecao:                   # o nó do grupo: sensor -> grelha_local (por agora o exemplo do modelo)
+  percecao:                   # exemplo do modelo (LiDAR 2D): /scan -> grelha_local; só publica com o simulador
     <<: *ros
     command: >
       ros2 run va_g07 scan_to_grid --ros-args -r __ns:=/${GRUPO:-g07}
+      --params-file /ws/install/va_g07/share/va_g07/config/params.yaml
+
+  rota:                       # o nó do G7: INSPVA + rota global (CSV) -> objetivo (+ grelha toda -1)
+    <<: *ros
+    command: >
+      ros2 run va_g07 rota_objetivo --ros-args -r __ns:=/${GRUPO:-g07}
       --params-file /ws/install/va_g07/share/va_g07/config/params.yaml
 
   planeador:                  # comum a todos: grelha_local -> caminho_local + estado

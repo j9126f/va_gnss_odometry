@@ -2,7 +2,7 @@
 <package format="3">
   <name>va_g07</name>
   <version>0.1.0</version>
-  <description>Grupo 07: driver (simulado) e perceção que publica a grelha local</description>
+  <description>Grupo 07: rota global GNSS -> objetivo local; simulador e perceção do modelo</description>
   <maintainer email="grupo07@ua.pt">Grupo 07</maintainer>
   <license>MIT</license>
 
@@ -13,6 +13,10 @@
   <exec_depend>tf2_ros_py</exec_depend>
   <exec_depend>python3-numpy</exec_depend>
   <exec_depend>va_planeamento</exec_depend>
+  <exec_depend>novatel_oem7_msgs</exec_depend>
+  <exec_depend>ament_index_python</exec_depend>
+  <exec_depend>rosbag2_py</exec_depend>
+  <test_depend>python3-pytest</test_depend>
 
   <export>
     <build_type>ament_python</build_type>

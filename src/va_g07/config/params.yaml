@@ -27,3 +27,16 @@
     corredor_y_min: 0.0        # limites laterais da estrada (m), se conhecidos;
     corredor_y_max: 0.0        # iguais = desligado
     limiar_desvio: 0.3
+
+/**/rota_objetivo:
+  ros__parameters:
+    # ficheiro_rota: por omissão share/va_g07/rotas/teste1.csv (CSV lat,lon; criar com rota_de_bag)
+    distancia_objetivo: 25.0   # m ao longo da rota (= objetivo_x do local_astar)
+    distancia_max_rota: 30.0   # m: mais longe do que isto, o carro está fora da rota
+    frequencia: 5.0            # Hz (o INSPVA chega a 50 Hz; o planeador corre a 5 Hz)
+    publicar_grelha: true      # grelha toda -1 para o planeador correr sem outro nó de perceção
+    resolucao: 0.2
+    x_min: -5.0
+    x_max: 35.0
+    y_min: -10.0
+    y_max: 10.0
