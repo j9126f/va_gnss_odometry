@@ -51,6 +51,18 @@ services:
     cap_add:
       - NET_ADMIN             # configurar a interface SocketCAN (bitrate, listen-only)
 
+  tf:                         # posição dos sensores no carro (TF estáticas), sempre ligado
+    # Dissertação de P. Bouça Nova (2018), fig. 3.6 e tab. 3.3. base_link = centro do retângulo das
+    # 4 rodas, 10 cm acima da altura dos eixos (a origem usada no SETINSOFFSET do recetor).
+    #   imu_link: 1,30 m atrás, 0,50 m à direita, 0,50 m acima; eixos X baixo, Y trás, Z esquerda
+    #   gps (antena GPS-702-GG): 1,00 m atrás, no eixo do carro, 1,30 m acima
+    <<: *ros
+    command: >
+      bash -c 'ros2 run tf2_ros static_transform_publisher --frame-id base_link --child-frame-id imu_link
+      --x -1.30 --y -0.50 --z 0.50 --qx -0.5 --qy 0.5 --qz 0.5 --qw 0.5 &
+      exec ros2 run tf2_ros static_transform_publisher --frame-id base_link --child-frame-id gps
+      --x -1.00 --y 0.00 --z 1.30'
+
   simulador:                  # LiDAR 2D simulado do modelo (para testar sem carro nem bag)
     <<: *ros
     profiles: [simulado]

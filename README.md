@@ -9,7 +9,7 @@ global publicado como objetivo do planeador local (A*).
 | | |
 |---|---|
 | **Sensor** | NovAtel SPAN-IGM-S1 (GNSS + IMU ADIS16488), USB-série 230400 baud; INSPVAS 50 Hz, BESTPOS 10 Hz, RAWIMUSX 200 Hz · CAN bus do carro via USB2CAN (8devices), 500 kbit/s, listen-only |
-| **Posição no carro** | <frame_id da antena e do IMU, x y z (m) e orientação em relação ao base_link: a medir> |
+| **Posição no carro** | `imu_link`: (-1,30; -0,50; 0,50) m, X baixo / Y trás / Z esquerda · `gps` (antena GPS-702-GG, tejadilho): (-1,00; 0; 1,30) m. `base_link` = centro das 4 rodas, 10 cm acima dos eixos (Bouça Nova, 2018, fig. 3.6) |
 | **Driver ROS 2** | `ros-jazzy-novatel-oem7-driver` (com overrides para firmware OEM6) · `ros-jazzy-ros2-socketcan` |
 | **Saídas** | `/novatel/oem7/*`, `/can/raw`, `/can/steering_angle`, `/g07/objetivo` (parte 2), `/g07/caminho_local`, `/g07/estado` |
 | **Equipa** | João Ferreira (113571), Carlos Laranjeira (113524) |
@@ -19,6 +19,7 @@ global publicado como objetivo do planeador local (A*).
 | Serviço (compose) | Nó | Subscreve | Publica |
 |---|---|---|---|
 | `driver` | `novatel_oem7_driver` | | `/novatel/oem7/inspva`, `/novatel/oem7/bestpos`, `/novatel/oem7/rawimusx`, ... |
+| `tf` | `static_transform_publisher` ×2 | | `/tf_static`: `base_link` → `imu_link`, `base_link` → `gps` |
 | `can` | `socketcan_receiver` + `can_direcao.py` | `can0` | `/can/raw` (can_msgs/Frame), `/can/steering_angle` (ackermann_msgs/AckermannDriveStamped) |
 | `percecao` | `scan_to_grid` (exemplo do modelo; o nó do G7 entra no Ex. 4) | `/scan`, `/tf_static` | `/g07/grelha_local` (nav_msgs/OccupancyGrid) |
 | `planeador` | `local_astar` (comum, `src/va_planeamento`) | `/g07/grelha_local`, `/g07/objetivo` | `/g07/caminho_local` (nav_msgs/Path), `/g07/estado` (std_msgs/String), `/g07/zona_proibida` |
@@ -84,8 +85,10 @@ Medido com `ros2 topic hz`, `ros2 topic echo --field header` e `ros2 topic info 
 | `/can/steering_angle` | `ackermann_msgs/msg/AckermannDriveStamped` | `base_link` | 100 Hz | BEST_EFFORT |
 
 ¹ 105 007 mensagens em 525 s; o `ros2 topic hz` mede só ~175 Hz porque não acompanha esta taxa.
-Os bags **não têm `/tf` nem `/tf_static`**: falta publicar as transformações `base_link` → `gps` e
-`base_link` → `imu_link` (posição da antena e do IMU no carro).
+Os bags gravados até 2026-11-18 **não têm `/tf_static`**. O serviço `tf` (sempre ligado) publica agora
+`base_link` → `imu_link` e `base_link` → `gps` com a instalação da dissertação de P. Bouça Nova (2018,
+fig. 3.6 e tab. 3.3: `SETIMUTOANTOFFSET -0.80 -0.30 0.50`, `SETINSOFFSET 0.5 -1.3 0.5`), e o
+`gravar.sh` grava-as nos bags seguintes. Ao reproduzir bags antigos, o serviço `tf` fornece-as.
 
 ## Dados
 
