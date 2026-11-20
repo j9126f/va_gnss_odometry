@@ -12,7 +12,7 @@ global publicado como objetivo do planeador local (A*).
 | **Posição no carro** | <frame_id da antena e do IMU, x y z (m) e orientação em relação ao base_link: a medir> |
 | **Driver ROS 2** | `ros-jazzy-novatel-oem7-driver` (com overrides para firmware OEM6) · `ros-jazzy-ros2-socketcan` |
 | **Saídas** | `/novatel/oem7/*`, `/can/raw`, `/can/steering_angle`, `/g07/objetivo` (parte 2), `/g07/caminho_local`, `/g07/estado` |
-| **Equipa** | <nome (nº mec.)>, <nome (nº mec.)> |
+| **Equipa** | João Ferreira (113571), Carlos Laranjeira (113524) |
 
 ## Arquitetura
 
