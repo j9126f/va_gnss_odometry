@@ -22,7 +22,7 @@ def ler_csv(caminho):
 
 def gravar_csv(caminho, latlon):
     with open(caminho, 'w', newline='') as f:
-        w = csv.writer(f)
+        w = csv.writer(f, lineterminator='\n')
         w.writerow(['lat', 'lon'])
         for lat, lon in latlon:
             w.writerow([f'{lat:.8f}', f'{lon:.8f}'])
