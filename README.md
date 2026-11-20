@@ -66,6 +66,27 @@ sudo chown -R $USER data                              # se precisares de mover/a
 Parâmetros que dependem do carro (`.env`): `OEM7_DEVICE` / `OEM7_IP`, `OEM7_BAUD`, `CAN_IF`,
 `CAN_BITRATE`, `CAN_DIRECAO_*`, `CAN_RELACAO_DIRECAO`.
 
+## Tópicos do sensor
+
+Medido com `ros2 topic hz`, `ros2 topic echo --field header` e `ros2 topic info -v` a reproduzir os bags
+`g00_gnss-ins_20261113_140141_teste1` e `g00_can_20261118_161425_exterior1` (Ex. 3 da aula 10).
+
+| Tópico | Tipo | frame_id | Frequência | QoS (reliability) |
+|---|---|---|---|---|
+| `/novatel/oem7/inspva` | `novatel_oem7_msgs/msg/INSPVA` | `gps` | 50 Hz | RELIABLE |
+| `/novatel/oem7/fix` | `sensor_msgs/msg/NavSatFix` | `gps` | 50 Hz | RELIABLE |
+| `/novatel/oem7/odom` | `nav_msgs/msg/Odometry` | `odom` | 50 Hz | RELIABLE |
+| `/novatel/oem7/bestpos` | `novatel_oem7_msgs/msg/BESTPOS` | `gps` | 10 Hz | RELIABLE |
+| `/novatel/oem7/bestvel` | `novatel_oem7_msgs/msg/BESTVEL` | `gps` | 10 Hz | RELIABLE |
+| `/novatel/oem7/rawimusx` | `novatel_oem7_msgs/msg/RAWIMUSX` | `imu_link` | 200 Hz ¹ | RELIABLE |
+| `/novatel/oem7/inspvax` | `novatel_oem7_msgs/msg/INSPVAX` | `gps` | 1 Hz | RELIABLE |
+| `/can/raw` | `can_msgs/msg/Frame` | `can` | ~1600 Hz (todas as tramas) | RELIABLE |
+| `/can/steering_angle` | `ackermann_msgs/msg/AckermannDriveStamped` | `base_link` | 100 Hz | BEST_EFFORT |
+
+¹ 105 007 mensagens em 525 s; o `ros2 topic hz` mede só ~175 Hz porque não acompanha esta taxa.
+Os bags **não têm `/tf` nem `/tf_static`**: falta publicar as transformações `base_link` → `gps` e
+`base_link` → `imu_link` (posição da antena e do IMU no carro).
+
 ## Dados
 
 | Bag | Data | Percurso | Duração | Tópicos |
