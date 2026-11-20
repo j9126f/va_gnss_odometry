@@ -7,7 +7,10 @@
 source /opt/ros/jazzy/setup.bash
 G="${GRUPO:-g07}"
 
-tem() { ros2 topic list 2>/dev/null | grep -q "$1"; }
+# só tópicos com publicador (o "ros2 topic list" também mostra os que só têm subscritores,
+# p. ex. /novatel/oem7/inspva subscrito pelo nó rota_objetivo sem o recetor ligado)
+publicados() { ros2 topic list -v 2>/dev/null | sed -n '/^Published topics:/,/^Subscribed topics:/p' | awk '/^ \* /{print $2}'; }
+tem() { publicados | grep -q "$1"; }
 
 echo "[gravar] À espera do driver NovAtel, do CAN, do /scan ou dos resultados /$G/* ..."
 GNSS=0; CAN=0; RES=0

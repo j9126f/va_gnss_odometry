@@ -105,6 +105,24 @@ docker compose run --rm reprodutor ros2 bag play /data/g00_gnss-ins_20261113_140
 docker compose logs -f rota planeador                # outro terminal
 ```
 
+## Planeador local: efeito dos parâmetros (Ex. 5 da aula 10)
+
+Simulador do modelo, objetivo a 25 m em frente, mediana das grelhas com a carrinha a 13-17 m
+(`tools/estudo_astar.py`, que corre o `planear()` do `va_planeamento` sobre as grelhas gravadas).
+
+| Parâmetro | Valor | Nós expandidos | Tempo (ms) | Desvio (m) | Observação |
+|---|---|---|---|---|---|
+| `peso_heuristica` | 1 | 663 | 2,4 | 0,4 | DESVIO em 86 % das grelhas |
+| | 3 | 126 | 1,0 | 0,4 | mesmo caminho, 5× menos nós |
+| | 10 | 126 | 1,0 | 0,4 | igual a 3: já vai direto ao objetivo |
+| `raio_inflacao` | 0,5 | 126 | 0,7 | 0 | LIVRE: a carrinha (y ≥ −0,8 m) não toca no corredor |
+| | 1,0 | 663 | 2,4 | 0,4 | zona proibida acaba em y ≈ 0,2 m: LIVRE/DESVIO conforme o ruído |
+| | 1,5 | 1454 | 5,1 | 1,0 | DESVIO sempre |
+| `desconhecido_livre` | true | 663 | 2,4 | 0,4 | |
+| | false | 1 | 0,4 | 0 | BLOQUEADO: o carro está rodeado de células -1 (o LiDAR só vê para a frente, a partir de 3,5 m) |
+| cenário `bloqueio` | omissão | 4053 | 12,2 | 4,5 | DESVIO pelo espaço desconhecido, fora da estrada (fig. 2b) |
+| | `corredor_y` −3,5…5 | 3130 | 9,0 | 0 | BLOQUEADO em 52 % (o resto: camião ainda fora da grelha) |
+
 ## Tópicos do sensor
 
 Medido com `ros2 topic hz`, `ros2 topic echo --field header` e `ros2 topic info -v` a reproduzir os bags
