@@ -1,0 +1,29 @@
+# Parâmetros dos nós. "/**/<nó>" aplica-se ao nó com esse nome
+# em qualquer namespace (/g07, /g05, ...).
+/**/fake_scan:
+  ros__parameters:
+    frame_id: lidar2d_frente
+    velocidade: 4.0
+    cenario: desvio            # desvio | bloqueio
+
+/**/scan_to_grid:
+  ros__parameters:
+    frame_grelha: base_link
+    resolucao: 0.2
+    x_min: -5.0
+    x_max: 35.0
+    y_min: -10.0
+    y_max: 10.0
+    marcar_livre: true
+
+/**/local_astar:
+  ros__parameters:
+    frequencia: 5.0
+    objetivo_x: 25.0           # objetivo local: 25 m à frente, no centro da faixa
+    objetivo_y: 0.0
+    raio_inflacao: 1.0         # meia largura do ATLASCAR2 (~0,75 m) + margem
+    peso_heuristica: 1.0
+    desconhecido_livre: true
+    corredor_y_min: 0.0        # limites laterais da estrada (m), se conhecidos;
+    corredor_y_max: 0.0        # iguais = desligado
+    limiar_desvio: 0.3

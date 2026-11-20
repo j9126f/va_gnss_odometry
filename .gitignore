@@ -1,6 +1,14 @@
-# Bags gravados (grandes; ficam no portátil/SSD)
+# Gerado pelo colcon
+build/
+install/
+log/
+
+# Bags: ficam no disco/SSD, não no GitHub
 data/*
 !data/.gitkeep
 
+# Python
 __pycache__/
 *.pyc
+.venv/
+.pytest_cache/

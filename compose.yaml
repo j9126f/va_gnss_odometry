@@ -1,48 +1,85 @@
-# Aquisição GNSS/INS (NovAtel SPAN-IGM-S1) - Ubuntu 24.04 nativo + Docker Engine
+# Grupo 07: GNSS/INS (NovAtel SPAN-IGM-S1) + CAN bus -> perceção -> planeador local (A*)
+# Ubuntu 24.04 nativo + Docker Engine. A configuração está no ficheiro .env (GRUPO, ROS_DOMAIN_ID,
+# percurso, recetor, CAN, bag a reproduzir).
 #
 #   docker compose build
-#   docker compose run --rm driver detectar_recetor.py   -> descobre porta e baud rate
-#   docker compose up driver                             -> só o driver (para verificar)
-#   docker compose up can                                -> só o CAN bus (para verificar)
-#   docker compose run --rm can can_identificar.py       -> descobre a mensagem do ângulo de direção
-#   docker compose --profile gravar up                   -> driver + CAN + gravação MCAP em ./data
-#   docker compose --profile foxglove up                 -> driver + foxglove_bridge (porta 8765)
+#   docker compose --profile simulado up                 -> LiDAR simulado + perceção + planeador
+#   docker compose --profile reproduzir up               -> o mesmo, com um bag gravado (BAG=...)
+#   docker compose --profile sensor up                   -> driver NovAtel + CAN + perceção + planeador
+#   docker compose --profile sensor --profile gravar up  -> aquisição no carro: tudo gravado em MCAP
+#   ... --profile foxglove                               -> foxglove_bridge (porta 8765)
+#   ... --profile rviz                                   -> rviz2 (Linux, X11)
 #
-# A configuração (grupo, percurso, IP/porta, baud rate, pasta dos bags) está no ficheiro .env
+#   docker compose run --rm driver detectar_recetor.py   -> descobre porta e baud rate do recetor
+#   docker compose run --rm can can_identificar.py       -> descobre a mensagem do ângulo de direção
+#   docker compose up driver   /   docker compose up can -> só um dos sensores (para verificar)
 
 x-ros: &ros
   build: .
-  image: va/gnss-ins:latest
+  image: va/${GRUPO:-g07}:latest
   network_mode: host          # rede real do portátil (recetor por Ethernet, DDS)
   ipc: host                   # Fast DDS entre contentores com rede host
-  stop_signal: SIGINT         # Ctrl+C "limpo" para o driver e para o ros2 bag
+  stop_signal: SIGINT         # Ctrl+C "limpo" para os nós e para o ros2 bag
   stop_grace_period: 30s      # tempo para o bag fechar o MCAP
   env_file: .env
   environment:
+    - ROS_DOMAIN_ID=${ROS_DOMAIN_ID:-42}
     - RMW_IMPLEMENTATION=rmw_fastrtps_cpp
   volumes:
-    - ${DATA_DIR:-./data}:/data
+    - ${DATA_DIR:-./data}:/data   # na aquisição real, apontar DATA_DIR para o SSD externo
 
 services:
-  driver:
+  # ----------------------------------------------------------------- fontes de dados
+  driver:                     # recetor NovAtel SPAN-IGM-S1 (GNSS + IMU)
     <<: *ros
+    profiles: [sensor]
     command: oem7_driver.sh
     restart: unless-stopped   # volta a arrancar se o USB falhar/for religado (para parar: docker compose down)
     volumes:
+      - ${DATA_DIR:-./data}:/data
       - /dev:/dev             # portas USB/série (também se ligadas depois do arranque)
     device_cgroup_rules:
       - 'c 188:* rmw'         # /dev/ttyUSB*
       - 'c 166:* rmw'         # /dev/ttyACM*
       - 'c 4:* rmw'           # /dev/ttyS*
 
-  can:
+  can:                        # CAN bus do carro (USB2CAN, listen-only): /can/raw, /can/steering_angle
     <<: *ros
+    profiles: [sensor]
     command: can.sh
     restart: unless-stopped   # volta a arrancar se o adaptador USB2CAN for desligado/religado
     cap_add:
       - NET_ADMIN             # configurar a interface SocketCAN (bitrate, listen-only)
 
-  gravador:
+  simulador:                  # LiDAR 2D simulado do modelo (para testar sem carro nem bag)
+    <<: *ros
+    profiles: [simulado]
+    command: >
+      ros2 run va_g07 fake_scan --ros-args
+      --params-file /ws/install/va_g07/share/va_g07/config/params.yaml
+
+  reprodutor:                 # reproduz um bag de ./data (só os tópicos em TOPICOS, ver .env)
+    <<: *ros
+    profiles: [reproduzir]
+    command: >
+      ros2 bag play /data/${BAG:-indicar_BAG} --loop
+      --topics ${TOPICOS:-/scan /tf /tf_static}
+
+  # ----------------------------------------------------------------- processamento
+  percecao:                   # o nó do grupo: sensor -> grelha_local (por agora o exemplo do modelo)
+    <<: *ros
+    command: >
+      ros2 run va_g07 scan_to_grid --ros-args -r __ns:=/${GRUPO:-g07}
+      --params-file /ws/install/va_g07/share/va_g07/config/params.yaml
+
+  planeador:                  # comum a todos: grelha_local -> caminho_local + estado
+    <<: *ros
+    command: >
+      ros2 run va_planeamento local_astar --ros-args -r __ns:=/${GRUPO:-g07}
+      --params-file /ws/install/va_g07/share/va_g07/config/params.yaml
+
+  # ----------------------------------------------------------------- gravação e visualização
+  gravador:                   # grava sensores (/novatel, /can, /scan) + resultados (/g07/*) + TF
     <<: *ros
     profiles: [gravar]
     command: gravar.sh
@@ -51,3 +88,15 @@ services:
     <<: *ros
     profiles: [foxglove]
     command: ros2 launch foxglove_bridge foxglove_bridge_launch.xml port:=8765
+
+  rviz:
+    <<: *ros
+    profiles: [rviz]
+    environment:
+      - ROS_DOMAIN_ID=${ROS_DOMAIN_ID:-42}
+      - RMW_IMPLEMENTATION=rmw_fastrtps_cpp
+      - DISPLAY=${DISPLAY:-:0}
+      - QT_X11_NO_MITSHM=1
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+    command: rviz2 -f base_link

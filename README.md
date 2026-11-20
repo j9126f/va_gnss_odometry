@@ -1,29 +1,80 @@
-# Aquisição GNSS/INS (NovAtel SPAN-IGM-S1) + CAN bus do carro (ROS 2 Jazzy)
+# VA 2026/2027 · Grupo 07 · GNSS + odometria
 
-Pensado para Ubuntu 24.04 nativo com Docker Engine. No Windows só serve para ver e analisar bags.
+Localização do carro com GNSS/INS NovAtel SPAN-IGM-S1 e odometria do CAN bus (ângulo de direção do
+Mitsubishi i-MiEV): aquisição em ROS 2, análise off-line e, na parte 2, o próximo waypoint da rota
+global publicado como objetivo do planeador local (A*).
+
+<!-- ![Demonstração](docs/img/demo.gif)   (Ex. 6: gerar com tools/figura_bag.py) -->
+
+| | |
+|---|---|
+| **Sensor** | NovAtel SPAN-IGM-S1 (GNSS + IMU ADIS16488), USB-série 230400 baud; INSPVAS 50 Hz, BESTPOS 10 Hz, RAWIMUSX 200 Hz · CAN bus do carro via USB2CAN (8devices), 500 kbit/s, listen-only |
+| **Posição no carro** | <frame_id da antena e do IMU, x y z (m) e orientação em relação ao base_link: a medir> |
+| **Driver ROS 2** | `ros-jazzy-novatel-oem7-driver` (com overrides para firmware OEM6) · `ros-jazzy-ros2-socketcan` |
+| **Saídas** | `/novatel/oem7/*`, `/can/raw`, `/can/steering_angle`, `/g07/objetivo` (parte 2), `/g07/caminho_local`, `/g07/estado` |
+| **Equipa** | <nome (nº mec.)>, <nome (nº mec.)> |
+
+## Arquitetura
+
+| Serviço (compose) | Nó | Subscreve | Publica |
+|---|---|---|---|
+| `driver` | `novatel_oem7_driver` | | `/novatel/oem7/inspva`, `/novatel/oem7/bestpos`, `/novatel/oem7/rawimusx`, ... |
+| `can` | `socketcan_receiver` + `can_direcao.py` | `can0` | `/can/raw` (can_msgs/Frame), `/can/steering_angle` (ackermann_msgs/AckermannDriveStamped) |
+| `percecao` | `scan_to_grid` (exemplo do modelo; o nó do G7 entra no Ex. 4) | `/scan`, `/tf_static` | `/g07/grelha_local` (nav_msgs/OccupancyGrid) |
+| `planeador` | `local_astar` (comum, `src/va_planeamento`) | `/g07/grelha_local`, `/g07/objetivo` | `/g07/caminho_local` (nav_msgs/Path), `/g07/estado` (std_msgs/String), `/g07/zona_proibida` |
+
+## Estrutura
 
 | Ficheiro | Função |
 |---|---|
-| `Dockerfile` | Imagem: ROS 2 Jazzy + driver NovAtel + MCAP + Foxglove bridge |
-| `compose.yaml` | Serviços: `driver`, `can`, `gravador` (profile `gravar`), `foxglove` (profile `foxglove`) |
-| `.env` | Configuração: grupo, percurso, IP/porta/baud, pasta dos bags, CAN (bitrate, sinal da direção) |
-| `docker/` | Scripts que correm dentro do contentor (driver, gravação, verificação, deteção da porta) |
-| `src/` | Pacotes ROS 2 do grupo (nós de processamento), compilados no build |
-| `data/` | Bags gravados (na aquisição real, apontar `DATA_DIR` para o SSD externo) |
+| `Dockerfile` | Imagem: ROS 2 Jazzy + driver NovAtel + SocketCAN + MCAP + Foxglove + workspace `src/` |
+| `compose.yaml` / `compose.windows.yaml` | Serviços (Linux / Windows). Profiles: `sensor`, `simulado`, `reproduzir`, `gravar`, `foxglove`, `rviz` |
+| `.env` | Configuração: grupo, ROS_DOMAIN_ID, percurso, recetor, CAN, bag a reproduzir |
+| `docker/` | Scripts que correm dentro do contentor (driver, CAN, gravação, verificação, deteção da porta) |
+| `src/va_planeamento/` | **Comum** (do modelo, sem alterações): grelha local + A* |
+| `src/va_g07/` | **Do grupo**: simulador e nó de perceção do modelo (por agora), parâmetros em `config/params.yaml` |
+| `tools/` | `figura_bag.py` (figuras e GIF a partir de um bag) |
 | `ler_bag.sh` / `ler_bag.py` | Análise off-line sem ROS: resumo, trajetória, atitude, CSV |
 | `ler_can.sh` / `ler_can.py` | CAN off-line sem ROS: IDs gravados e ângulo de direção descodificado de `/can/raw` (CSV + PNG) |
+| `data/` | Bags MCAP (na aquisição real, apontar `DATA_DIR` para o SSD externo) |
 
-## Comandos
+## Como correr
+
+Requisitos: Docker (Ubuntu 24.04 com Docker Engine; Windows com Docker Desktop, sem sensores).
 
 ```bash
+git clone https://github.com/j9126f/va_gnss_odometry.git && cd va_gnss_odometry
 docker compose build                                  # uma vez (demora alguns minutos)
+docker compose --profile simulado up                  # sem sensor: LiDAR simulado + perceção + planeador
+BAG=<pasta_em_data> docker compose --profile reproduzir up   # com um bag gravado
+```
+
+Windows (PowerShell): `$env:COMPOSE_FILE = "compose.windows.yaml"` antes dos comandos acima.
+Visualização: `--profile foxglove` e, no Lichtblick/Foxglove, `ws://localhost:8765`.
+
+### Aquisição no carro
+
+```bash
 docker compose run --rm driver detectar_recetor.py    # só se a deteção automática falhar
-docker compose up driver                              # arranca o driver
+docker compose up driver                              # só o driver (para verificar)
 docker compose exec driver verificar.sh               # (outro terminal) confirma que há dados
-docker compose --profile gravar up                    # driver + CAN + gravação (Ctrl+C para parar)
+docker compose --profile sensor --profile gravar up   # driver + CAN + gravação (Ctrl+C para parar)
 ./ler_bag.sh data/<pasta_do_bag>                      # análise
 sudo chown -R $USER data                              # se precisares de mover/apagar bags
 ```
+
+Parâmetros que dependem do carro (`.env`): `OEM7_DEVICE` / `OEM7_IP`, `OEM7_BAUD`, `CAN_IF`,
+`CAN_BITRATE`, `CAN_DIRECAO_*`, `CAN_RELACAO_DIRECAO`.
+
+## Dados
+
+| Bag | Data | Percurso | Duração | Tópicos |
+|---|---|---|---|---|
+| `g00_gnss-ins_20261113_135159_teste` | 2026-11-13 | interior (sem fix GNSS) | 30 s | `/novatel/oem7/*` |
+| `g00_gnss-ins_20261113_140141_teste1` | 2026-11-13 | exterior, 1.ª volta | 8,7 min | `/novatel/oem7/*` |
+| `g00_can_20261118_161425_exterior1` | 2026-11-18 | exterior | 41,5 s | `/can/raw`, `/can/steering_angle` |
+
+Os bags gravados antes da aula 10 têm o prefixo `g00` (o grupo ainda não estava definido).
 
 ## CAN bus (ângulo de direção)
 

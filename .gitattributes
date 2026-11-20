@@ -1,0 +1,3 @@
+# Scripts e ficheiros de configuração sempre com fim de linha Linux (LF),
+# mesmo quando o repositório é clonado em Windows.
+* text=auto eol=lf

@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>va_g07</name>
+  <version>0.1.0</version>
+  <description>Grupo 07: driver (simulado) e perceção que publica a grelha local</description>
+  <maintainer email="grupo07@ua.pt">Grupo 07</maintainer>
+  <license>MIT</license>
+
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>tf2_ros_py</exec_depend>
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>va_planeamento</exec_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

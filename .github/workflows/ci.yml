@@ -1,0 +1,16 @@
+# Verificação automática a cada push: a imagem constrói-se e os testes passam.
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  docker:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Construir a imagem
+        run: docker compose build
+      - name: Testes (pytest dentro do contentor)
+        run: docker compose run --rm planeador python3 -m pytest -q /ws/src

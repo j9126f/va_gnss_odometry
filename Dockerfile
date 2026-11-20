@@ -1,4 +1,4 @@
-# Aquisição GNSS/INS NovAtel SPAN-IGM-S1 + CAN bus do carro (ROS 2 Jazzy)
+# Grupo 07: GNSS/INS NovAtel SPAN-IGM-S1 + CAN bus do carro + perceção/planeamento local (ROS 2 Jazzy)
 # Quando a imagem base dos docentes estiver publicada:
 #   docker compose build --build-arg BASE_IMAGE=<imagem-base-do-repositorio-comum>
 ARG BASE_IMAGE=ros:jazzy-ros-base
@@ -16,13 +16,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     iproute2 \
     can-utils \
     python3-serial \
+    ros-jazzy-rviz2 \
+    python3-numpy \
+    python3-pytest \
     && rm -rf /var/lib/apt/lists/*
 
-# Workspace para nós do grupo (só compila se existir algum pacote em src/)
+# Workspace ROS 2: o pacote comum (va_planeamento) e o pacote do grupo (va_g07)
 WORKDIR /ws
 COPY src/ src/
-RUN source /opt/ros/jazzy/setup.bash \
-    && if [ -n "$(find src -name package.xml)" ]; then colcon build; fi
+RUN source /opt/ros/jazzy/setup.bash && colcon build
 
 # Scripts do projeto (fim de linha LF garantido mesmo se vierem do Windows)
 COPY docker/ /usr/local/bin/

@@ -1,0 +1,11 @@
+{
+  "name": "VA - projeto do grupo",
+  "build": { "dockerfile": "../Dockerfile", "context": ".." },
+  "runArgs": ["--network=host", "--ipc=host"],
+  "containerEnv": { "ROS_DOMAIN_ID": "42" },
+  "workspaceMount": "source=${localWorkspaceFolder},target=/ws,type=bind",
+  "workspaceFolder": "/ws",
+  "customizations": {
+    "vscode": { "extensions": ["ms-python.python"] }
+  }
+}
