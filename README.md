@@ -67,6 +67,24 @@ sudo chown -R $USER data                              # se precisares de mover/a
 Parâmetros que dependem do carro (`.env`): `OEM7_DEVICE` / `OEM7_IP`, `OEM7_BAUD`, `CAN_IF`,
 `CAN_BITRATE`, `CAN_DIRECAO_*`, `CAN_RELACAO_DIRECAO`.
 
+## Nó do grupo (especificação, Ex. 4 da aula 10)
+
+O G7 não deteta obstáculos: a contribuição para a decisão local é o **objetivo** do planeador, o ponto da
+rota global (aula 9) que está à frente do carro, no `base_link`.
+
+| | Grupo 07 |
+|---|---|
+| **Subscreve** | `/novatel/oem7/inspva` (`novatel_oem7_msgs/INSPVA`, frame `gps`, 50 Hz, RELIABLE): latitude, longitude, azimute. Rota global: lista de waypoints (lat, lon) da aula 9 (parâmetro `ficheiro_rota`). Parte 2: `/can/steering_angle` (BEST_EFFORT) para odometria quando o GNSS falha |
+| **Ocupado (100)** | Nada: o GNSS/INS só mede a pose do próprio carro, não vê o que o rodeia |
+| **Livre (0)** | Nada |
+| **Desconhecido (-1)** | A grelha toda. É publicada (mesma geometria do contrato: 0,2 m, x -5…35 m, y -10…10 m) para o planeador correr sozinho com o objetivo do G7; na parte 2 a grelha vem dos grupos de perceção |
+| **Nó e ficheiro** | `rota_objetivo`, em `src/va_g07/va_g07/rota_objetivo.py` (entrada em `setup.py`; serviço `percecao` do `compose.yaml`) |
+| **Publica** | `/g07/objetivo` (`geometry_msgs/PoseStamped`, `base_link`): ponto da rota a ~25 m à frente, ao longo da rota, dentro da grelha · `/g07/grelha_local` (`nav_msgs/OccupancyGrid`, `base_link`, toda -1) · `/g07/rota_local` (`nav_msgs/Path`, `base_link`): troço da rota à frente, para visualizar |
+
+Cálculo do objetivo: waypoint mais próximo do carro → avançar 25 m ao longo da rota → (lat, lon) para
+(Este, Norte) local à volta da posição atual → rodar pelo azimute do INSPVA (`x = dE·sin ψ + dN·cos ψ`,
+`y = −dE·cos ψ + dN·sin ψ`, ψ medido de Norte para Este). `header.stamp` = o do INSPVA que lhe deu origem.
+
 ## Tópicos do sensor
 
 Medido com `ros2 topic hz`, `ros2 topic echo --field header` e `ros2 topic info -v` a reproduzir os bags
