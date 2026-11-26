@@ -30,8 +30,8 @@ def stamp(msg):
 def ler(bag, grupo):
     mcap = next(bag.glob('*.mcap')) if bag.is_dir() else bag
     t = {k: f'/{grupo}/{k}' for k in ('grelha_local', 'zona_proibida', 'caminho_local',
-                                      'estado', 'objetivo')}
-    grelhas, zonas, caminhos, estados, objetivos = {}, {}, {}, [], []
+                                      'estado', 'objetivo', 'rota_local')}
+    grelhas, zonas, caminhos, estados, objetivos, rotas = {}, {}, {}, [], [], []
     for m in read_ros2_messages(str(mcap), topics=list(t.values())):
         msg = m.ros_msg
         if m.channel.topic == t['grelha_local']:
@@ -39,18 +39,23 @@ def ler(bag, grupo):
         elif m.channel.topic == t['zona_proibida']:
             zonas[stamp(msg)] = msg
         elif m.channel.topic == t['caminho_local']:
-            caminhos[stamp(msg)] = msg
+            caminhos[stamp(msg)] = (m.log_time_ns * 1e-9, msg)
+        elif m.channel.topic == t['rota_local']:
+            rotas.append((m.log_time_ns * 1e-9, [(q.pose.position.x, q.pose.position.y) for q in msg.poses]))
         elif m.channel.topic == t['objetivo']:
             objetivos.append((m.log_time_ns * 1e-9, (msg.pose.position.x, msg.pose.position.y)))
         else:
             estados.append((m.log_time_ns * 1e-9, msg.data))
-    # um "instante" = caminho + grelha + zona proibida com o mesmo header.stamp
-    instantes = [(s, grelhas[s], zonas.get(s), caminhos[s])
+    # um "instante" = caminho + grelha + zona proibida com o mesmo header.stamp. O tempo do
+    # instante é o da gravação do caminho (log_time), o mesmo relógio do estado, do objetivo e
+    # da rota: ao reproduzir um bag antigo, o header.stamp é o do sensor (outro dia).
+    instantes = [(caminhos[s][0], grelhas[s], zonas.get(s), caminhos[s][1])
                  for s in sorted(caminhos) if s in grelhas]
-    return instantes, estados, objetivos
+    instantes.sort(key=lambda x: x[0])
+    return instantes, estados, objetivos, rotas
 
 
-def desenhar(ax, grelha, zona, caminho, titulo, objetivo=None):
+def desenhar(ax, grelha, zona, caminho, titulo, objetivo=None, rota=None):
     info = grelha.info
     w, h, r = info.width, info.height, info.resolution
     x0, y0 = info.origin.position.x, info.origin.position.y
@@ -64,6 +69,8 @@ def desenhar(ax, grelha, zona, caminho, titulo, objetivo=None):
         proib = np.ma.masked_where((c < 100) | (d >= 50), c)
         ax.imshow(proib, origin='lower', extent=ext, interpolation='nearest',
                   cmap=ListedColormap(['#f4a3a3']), alpha=0.8)
+    if rota:
+        ax.plot(*zip(*rota), color='#2563eb', lw=1.2, ls='--', label='rota global')
     xs = [p.pose.position.x for p in caminho.poses]
     ys = [p.pose.position.y for p in caminho.poses]
     ax.plot(xs, ys, color='#4a7c00', lw=2.5)
@@ -81,6 +88,11 @@ def desenhar(ax, grelha, zona, caminho, titulo, objetivo=None):
 def estado_em(estados, t):
     anteriores = [e for (te, e) in estados if te <= t + 0.05]
     return anteriores[-1] if anteriores else ''
+
+
+def rota_em(rotas, t):
+    anteriores = [r for (tr, r) in rotas if tr <= t + 0.05]
+    return anteriores[-1] if anteriores else None
 
 
 def objetivo_em(objetivos, t, omissao):
@@ -101,7 +113,7 @@ def main():
     a = ap.parse_args()
     a.saida.mkdir(parents=True, exist_ok=True)
 
-    instantes, estados, objetivos = ler(a.bag, a.grupo)
+    instantes, estados, objetivos, rotas = ler(a.bag, a.grupo)
     if not instantes:
         raise SystemExit(f'sem /{a.grupo}/caminho_local + /{a.grupo}/grelha_local no bag')
     t0 = instantes[0][0]
@@ -117,7 +129,7 @@ def main():
     fig, axs = plt.subplots(len(escolha), 1, figsize=(9, 3.2 * len(escolha)))
     for ax, (s, g, c, p, e) in zip(np.atleast_1d(axs), escolha):
         desenhar(ax, g, c, p, f't = {s - t0:5.1f} s   {e}',
-                 objetivo_em(objetivos, s, tuple(a.objetivo)))
+                 objetivo_em(objetivos, s, tuple(a.objetivo)), rota_em(rotas, s))
     fig.tight_layout()
     fig.savefig(a.saida / f'{nome}_instantes.png', dpi=150)
 
@@ -150,7 +162,7 @@ def main():
             for s, g, c, p, e in rot[::2]:
                 ax.clear()
                 desenhar(ax, g, c, p, f't = {s - t0:5.1f} s   {e}',
-                 objetivo_em(objetivos, s, tuple(a.objetivo)))
+                         objetivo_em(objetivos, s, tuple(a.objetivo)), rota_em(rotas, s))
                 escritor.grab_frame()
         print(f'GIF: {a.gif}')
 

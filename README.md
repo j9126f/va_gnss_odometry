@@ -4,7 +4,7 @@ Localização do carro com GNSS/INS NovAtel SPAN-IGM-S1 e odometria do CAN bus (
 Mitsubishi i-MiEV): aquisição em ROS 2, análise off-line e, na parte 2, o próximo waypoint da rota
 global publicado como objetivo do planeador local (A*).
 
-<!-- ![Demonstração](docs/img/demo.gif)   (Ex. 6: gerar com tools/figura_bag.py) -->
+![Demonstração](docs/img/demo.gif)
 
 | | |
 |---|---|
@@ -123,6 +123,29 @@ Simulador do modelo, objetivo a 25 m em frente, mediana das grelhas com a carrin
 | cenário `bloqueio` | omissão | 4053 | 12,2 | 4,5 | DESVIO pelo espaço desconhecido, fora da estrada (fig. 2b) |
 | | `corredor_y` −3,5…5 | 3130 | 9,0 | 0 | BLOQUEADO em 52 % (o resto: camião ainda fora da grelha) |
 
+## Resultados (Ex. 6 da aula 10)
+
+Bag `g07_gnss-ins-resultados_20261126_112057_exterior1` (39 s): o `/novatel/oem7/inspva` do bag `teste1`
+reproduzido com os serviços `tf`, `rota` e `planeador`, a gravar as saídas do G7. Figuras geradas com
+
+```bash
+python tools/figura_bag.py data/g07_gnss-ins-resultados_20261126_112057_exterior1 --grupo g07 --gif docs/img/demo.gif
+```
+
+![Três instantes](docs/img/g07_gnss-ins-resultados_20261126_112057_exterior1_instantes.png)
+
+Grelha local (toda desconhecida, cinzento), carro (retângulo verde), troço da rota global à frente
+(`/g07/rota_local`, tracejado azul), objetivo a ~25 m ao longo da rota (`/g07/objetivo`, ✖) e caminho do
+A* (`/g07/caminho_local`, verde). Em reta o objetivo fica em y ≈ 0 e o caminho é direito (LIVRE); em curva
+o objetivo sai do eixo e o A* desvia-se lateralmente até 2,4 m.
+
+![Estado do planeador](docs/img/g07_gnss-ins-resultados_20261126_112057_exterior1_estado.png)
+
+O planeador está em DESVIO 98 % do tempo, mas sem obstáculos: o `local_astar` chama DESVIO a qualquer
+caminho com desvio lateral, e o desvio aqui vem só da curvatura da rota (o objetivo não está em frente).
+LIVRE só nos troços retos (t ≈ 12,6 s e 36,5 s). BLOQUEADO nunca acontece, porque a grelha do G7 não tem
+células ocupadas e `desconhecido_livre` é `true`.
+
 ## Tópicos do sensor
 
 Medido com `ros2 topic hz`, `ros2 topic echo --field header` e `ros2 topic info -v` a reproduzir os bags
@@ -153,8 +176,12 @@ fig. 3.6 e tab. 3.3: `SETIMUTOANTOFFSET -0.80 -0.30 0.50`, `SETINSOFFSET 0.5 -1.
 | `g00_gnss-ins_20261113_135159_teste` | 2026-11-13 | interior (sem fix GNSS) | 30 s | `/novatel/oem7/*` |
 | `g00_gnss-ins_20261113_140141_teste1` | 2026-11-13 | exterior, 1.ª volta | 8,7 min | `/novatel/oem7/*` |
 | `g00_can_20261118_161425_exterior1` | 2026-11-18 | exterior | 41,5 s | `/can/raw`, `/can/steering_angle` |
+| `g07_gnss-ins-resultados_20261126_112057_exterior1` | 2026-11-26 | `teste1` reproduzido | 39 s | `/novatel/oem7/inspva`, `/novatel/oem7/fix`, `/g07/*`, `/tf_static` |
+| `g07_gnss-ins-can-encoder-resultados_20261126_154724_exterior2` | 2026-11-26 | exterior, com troço de cave (~9-12 min, sem GNSS) | 20,3 min | `/novatel/oem7/*`, `/can/raw`, `/can/steering_angle`, `/encoder/raw`, `/encoder/posicao`, `/g07/*`, `/tf_static` |
 
 Os bags gravados antes da aula 10 têm o prefixo `g00` (o grupo ainda não estava definido).
+O bag `exterior2` (533 MB) está no GitHub convertido para MCAP com compressão zstd e dividido em
+ficheiros de < 100 MB (limite do GitHub): mesmas 3 518 941 mensagens, lê-se diretamente com `ros2 bag` e Foxglove.
 
 ## CAN bus (ângulo de direção)
 
