@@ -1,0 +1,22 @@
+
+=== Candidatos (melhor primeiro)
+           ID    Hz  campo                              centro  esquerda  direita  ruído
+        0x236   100  bytes 0-1 big-endian                 4100      5379     2811      0
+        0x236   100  bytes 0-1 big-endian c/ sinal        4100      5379     2811      0
+        0x236   100  byte 0                                 16        21       10      0
+        0x236   100  byte 0 c/ sinal                        16        21       10      0
+
+=== Sugestão para o .env (melhor candidato)
+CAN_DIRECAO_ID=0x236
+CAN_DIRECAO_EXT=0
+CAN_DIRECAO_BIT=7
+CAN_DIRECAO_BITS=16
+CAN_DIRECAO_ORDEM=motorola
+CAN_DIRECAO_SINAL=0
+CAN_DIRECAO_ESCALA=0.1      # NÃO MEDIDA: na última fase o volante não ficou parado uma volta à esquerda; repete a identificação
+CAN_DIRECAO_OFFSET=-410      # põe a 0 o valor lido com o volante ao centro
+CAN_DIRECAO_SENTIDO=1
+
+Com estes valores, o volante no batente esquerdo está a +128º e no direito a -129º.
+O ângulo das RODAS = ângulo do volante / CAN_RELACAO_DIRECAO (desmultiplicação da direção, ≈ 14-17;
+ver ficha técnica, ou medir o ângulo das rodas no batente: relação = ângulo do volante / ângulo das rodas).
