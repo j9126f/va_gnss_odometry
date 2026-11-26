@@ -5,7 +5,7 @@
 #   docker compose build
 #   docker compose --profile simulado up                 -> LiDAR simulado + perceção + planeador
 #   docker compose --profile reproduzir up               -> o mesmo, com um bag gravado (BAG=...)
-#   docker compose --profile sensor up                   -> driver NovAtel + CAN + perceção + planeador
+#   docker compose --profile sensor up                   -> driver NovAtel + CAN + encoder + perceção + planeador
 #   docker compose --profile sensor --profile gravar up  -> aquisição no carro: tudo gravado em MCAP
 #   ... --profile foxglove                               -> foxglove_bridge (porta 8765)
 #   ... --profile rviz                                   -> rviz2 (Linux, X11)
@@ -50,6 +50,18 @@ services:
     restart: unless-stopped   # volta a arrancar se o adaptador USB2CAN for desligado/religado
     cap_add:
       - NET_ADMIN             # configurar a interface SocketCAN (bitrate, listen-only)
+
+  encoder:                    # encoder da roda (Arduino, USB série 115200): /encoder/raw, /encoder/posicao
+    <<: *ros
+    profiles: [sensor]
+    command: encoder.py
+    restart: unless-stopped   # volta a arrancar se o USB for desligado/religado
+    volumes:
+      - ${DATA_DIR:-./data}:/data
+      - /dev:/dev
+    device_cgroup_rules:
+      - 'c 166:* rmw'         # /dev/ttyACM*
+      - 'c 188:* rmw'         # /dev/ttyUSB*
 
   tf:                         # posição dos sensores no carro (TF estáticas), sempre ligado
     # Dissertação de P. Bouça Nova (2018), fig. 3.6 e tab. 3.3. base_link = centro do retângulo das
